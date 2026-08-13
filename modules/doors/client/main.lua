@@ -146,3 +146,32 @@ local options = {
         end
     }
 }
+-- Tür-Löschung auf dem Client verarbeiten
+RegisterNetEvent('access_control:client:RemoveDoor')
+AddEventHandler('access_control:client:RemoveDoor', function(doorId)
+    ConfiguredDoors[doorId] = nil
+    DoorStates[doorId] = nil
+    exports.ox_target:removeZone('ac_zone_' .. doorId)
+end)
+
+-- Verbesserte Native-Türausrichtung (Unterstützt Einzel- und Doppeltüren)
+function UpdateNativeDoorState(doorId, coords, state)
+    local door = ConfiguredDoors[doorId]
+    if not door then return end
+
+    local isLocked = (state == 'LOCKED')
+
+    if door.is_double and door.doors_data then
+        -- Wenn es eine Doppeltür ist, verarbeite beide Flügel
+        for _, subDoor in ipairs(door.doors_data) do
+            local doorHash = type(subDoor.model) == 'number' and subDoor.model or GetHashKey(subDoor.model)
+            AddDoorToSystem(doorHash, doorHash, subDoor.coords.x, subDoor.coords.y, subDoor.coords.z, false, false, false)
+            DoorSystemSetDoorState(doorHash, isLocked and 1 or 0, false, true)
+        end
+    else
+        -- Einzeltür
+        local doorHash = type(door.model) == 'number' and door.model or GetHashKey(door.model)
+        AddDoorToSystem(doorHash, doorHash, door.coords.x, door.coords.y, door.coords.z, false, false, false)
+        DoorSystemSetDoorState(doorHash, isLocked and 1 or 0, false, true)
+    end
+end
