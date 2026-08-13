@@ -1,0 +1,97 @@
+local ConfiguredDoors = {}
+local DoorStates = {}
+local TargetZones = {}
+
+-- 1. Initialer Sync beim Laden des Spielers
+Citizen.CreateThread(function()
+    -- Warten bis der Spieler vollständig geladen ist
+    while not next(ConfiguredDoors) do
+        ConfiguredDoors, DoorStates = lib.callback.await('access_control:server:GetDoorStates', false)
+        Citizen.Wait(1000)
+    end
+    
+    SetupTargets()
+end)
+
+-- 2. ox_target Setup
+function SetupTargets()
+    for doorId, door in pairs(ConfiguredDoors) do
+        
+        local options = {
+            {
+                name = 'ac_toggle_' .. doorId,
+                icon = 'fa-solid fa-power-off',
+                -- Das Label ändert sich dynamisch je nach Zustand!
+                label = 'Tür umschalten', 
+                canInteract = function()
+                    -- Target-Option nur anzeigen, wenn der Spieler nah genug ist
+                    return true 
+                end,
+                onSelect = function()
+                    AttemptDoorToggle(doorId)
+                end
+            }
+        }
+
+        -- ox_target BoxZone für die Tür erstellen
+        local zoneId = exports.ox_target:addBoxZone({
+            coords = vec3(door.coords.x, door.coords.y, door.coords.z),
+            size = vec3(2.0, 2.0, 2.5), -- Kann in der DB verfeinert werden
+            rotation = door.heading,
+            debug = false,
+            options = options
+        })
+        
+        TargetZones[doorId] = zoneId
+        
+        -- Tür im GTA Engine sperren/entsperren (Native)
+        UpdateNativeDoorState(doorId, door.coords, DoorStates[doorId])
+    end
+end
+
+-- 3. Interaktion an den Server senden
+function AttemptDoorToggle(doorId)
+    -- Lade-Animation für UI Feedback
+    lib.notify({ type = 'info', description = 'Prüfe Berechtigungen...', duration = 1500 })
+
+    -- Server Callback feuern
+    lib.callback('access_control:server:InteractDoor', false, function(success, reason)
+        if success then
+            lib.notify({ type = 'success', description = 'Zugriff gewährt.' })
+        else
+            -- Bei Fehler (z.B. "EXPLICITLY_DENIED" oder "UNAUTHORIZED")
+            lib.notify({ type = 'error', description = 'Zugriff verweigert (' .. reason .. ')' })
+            
+            -- Ggf. Sound abspielen
+            PlaySoundFrontend(-1, "Hack_Failed", "DLC_HEIST_BIOLAB_PREP_HACKING_SOUNDS", true)
+        end
+    end, doorId, 'TOGGLE')
+end
+
+-- 4. Echtzeit-Updates vom Server empfangen
+RegisterNetEvent('access_control:client:UpdateDoorState')
+AddEventHandler('access_control:client:UpdateDoorState', function(doorId, newState)
+    DoorStates[doorId] = newState
+    
+    -- GTA Engine Door State updaten
+    if ConfiguredDoors[doorId] then
+        UpdateNativeDoorState(doorId, ConfiguredDoors[doorId].coords, newState)
+    end
+end)
+
+-- 5. GTA Native Logik (Türen physikalisch sperren)
+function UpdateNativeDoorState(doorId, coords, state)
+    local doorEntity = GetClosestObjectOfType(coords.x, coords.y, coords.z, 2.0, ConfiguredDoors[doorId].model, false, false, false)
+    
+    if doorEntity ~= 0 then
+        local isLocked = (state == 'LOCKED')
+        
+        -- GTA Natives für Tür-Status
+        FreezeEntityPosition(doorEntity, isLocked)
+        
+        -- Setzt die Tür sanft zu, wenn sie gesperrt wird
+        if isLocked then
+            SetEntityRotation(doorEntity, 0.0, 0.0, ConfiguredDoors[doorId].heading, 2, true)
+        end
+    end
+end 
