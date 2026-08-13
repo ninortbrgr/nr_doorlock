@@ -95,3 +95,54 @@ function UpdateNativeDoorState(doorId, coords, state)
         end
     end
 end 
+
+-- Empfange neu erstellte Tür vom Server während des Spielens
+RegisterNetEvent('access_control:client:RegisterNewDoor')
+AddEventHandler('access_control:client:RegisterNewDoor', function(door)
+    ConfiguredDoors[door.id] = door
+    DoorStates[door.id] = door.default_state
+
+    -- Registriere ox_target Zone direkt
+    local options = {
+        {
+            name = 'ac_toggle_' .. door.id,
+            icon = 'fa-solid fa-power-off',
+            label = 'Tür umschalten',
+            onSelect = function()
+                AttemptDoorToggle(door.id)
+            end
+        }
+    }
+
+    exports.ox_target:addBoxZone({
+        coords = vec3(door.coords.x, door.coords.y, door.coords.z),
+        size = vec3(2.0, 2.0, 2.5),
+        rotation = door.heading,
+        debug = false,
+        options = options
+    })
+
+    UpdateNativeDoorState(door.id, door.coords, door.default_state)
+end)
+
+-- Innerhalb der Target-Erstellung für jede Tür:
+local options = {
+    {
+        name = 'ac_toggle_' .. door.id,
+        icon = 'fa-solid fa-power-off',
+        label = 'Tür umschalten',
+        onSelect = function() AttemptDoorToggle(door.id) end
+    },
+    {
+        name = 'ac_hack_' .. door.id,
+        icon = 'fa-solid fa-laptop-code',
+        label = 'Sicherheitssystem überbrücken',
+        canInteract = function()
+            -- Nur anzeigen wenn Tür gesperrt ist und Security Level > 0 besitzt
+            return DoorStates[door.id] == 'LOCKED' and (door.security_level or 0) > 0
+        end,
+        onSelect = function()
+            TriggerEvent('access_control:client:StartHack', door.id)
+        end
+    }
+}
