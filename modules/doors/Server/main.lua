@@ -75,3 +75,25 @@ function DoorManager.HandleAutoLock(doorId, timeInSeconds)
         end
     end)
 end
+
+-- Aktualisierte Berechtigungsprüfung im DoorManager
+function DoorManager.CanPlayerAccess(source, doorId)
+    local door = DoorManager.Doors[doorId]
+    if not door then return false end
+
+    local player = PlayerManager.GetContext(source)
+
+    -- 1. Admins haben immer Zugriff
+    if player.isAdmin then return true end
+
+    -- 2. Prüfe Keycards & Badges im Inventar
+    local hasCard, reason = KeycardManager.HasValidKeycard(source, door)
+    if hasCard then return true end
+
+    -- 3. Standard-Fraktionscheck (falls kein Badge benötigt wird)
+    if door.owner_faction and player.faction == door.owner_faction then
+        return true
+    end
+
+    return false
+end
