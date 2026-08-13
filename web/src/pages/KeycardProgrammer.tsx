@@ -2,10 +2,20 @@ import { useState } from 'react';
 import { fetchNui } from '../utils/fetchNui';
 import { CreditCard, ShieldCheck, User, CheckCircle2 } from 'lucide-react';
 
-export default function KeycardProgrammer() {
+// NEU: Interface für die Properties definieren
+interface KeycardProgrammerProps {
+  terminalData?: {
+    id: string;
+    name: string;
+    faction?: string;
+    max_access_level: number;
+  };
+}
+
+export default function KeycardProgrammer({ terminalData }: KeycardProgrammerProps) {
   const [ownerName, setOwnerName] = useState('');
   const [accessLevel, setAccessLevel] = useState(1);
-  const [faction, setFaction] = useState('lapd');
+  const [faction, setFaction] = useState(terminalData?.faction || 'lapd');
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
 
   const handleProgramCard = () => {
@@ -20,7 +30,7 @@ export default function KeycardProgrammer() {
       faction,
       label: `Keycard - ${ownerName}`
     }).then((response: any) => {
-      if (response.success) {
+      if (response && response.success) {
         setStatusMsg('Keycard erfolgreich beschrieben!');
       } else {
         setStatusMsg('Fehler beim Beschreiben der Karte.');
@@ -35,7 +45,9 @@ export default function KeycardProgrammer() {
           <CreditCard className="w-8 h-8 text-blue-400" />
           <div>
             <h2 className="text-xl font-bold">Keycard Terminal</h2>
-            <p className="text-xs text-slate-400">NFC-Karten codieren & zuweisen</p>
+            <p className="text-xs text-slate-400">
+              {terminalData ? terminalData.name : 'NFC-Karten codieren & zuweisen'}
+            </p>
           </div>
         </div>
 
@@ -82,7 +94,7 @@ export default function KeycardProgrammer() {
             <input
               type="range"
               min="1"
-              max="5"
+              max={terminalData?.max_access_level || 5}
               value={accessLevel}
               onChange={(e) => setAccessLevel(Number(e.target.value))}
               className="w-full accent-blue-500 cursor-pointer"

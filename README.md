@@ -16,3 +16,14 @@ Füge diese Items in deine ox_inventory/data/items.lua ein:
     close = true,
     description = 'Eine programmierbare NFC-Karte für elektronische Türschlösser.'
 }
+
+
+Ergänzung für MySql Datenbank:
+CREATE TABLE IF NOT EXISTS `ac_terminals` (
+  `id` VARCHAR(50) NOT NULL,
+  `name` VARCHAR(100) NOT NULL,
+  `faction` VARCHAR(50) DEFAULT NULL,
+  `max_access_level` INT DEFAULT 3,
+  `coords` LONGTEXT NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
