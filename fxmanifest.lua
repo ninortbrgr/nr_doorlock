@@ -22,18 +22,18 @@ shared_scripts {
 -- Server-Side Core & Modules
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
-    'core/server/event_bus.lua',
-    'core/server/database.lua',
-    'core/server/policy_engine.lua',
-    'core/server/api.lua',
-    'modules/discord/server/*.lua',
-    'modules/doors/server/*.lua'
+    'core/server/eventbus.lua',
+    'modules/doors/server/*.lua',
+    'modules/hacking/server/*.lua',
+    'modules/alarms/server/*.lua',
+    'modules/keycards/server/*.lua',
+    'modules/logs/server/discord.lua'
 }
-
 -- Client-Side Core & Modules
 client_scripts {
     'core/client/sync.lua',
-    'modules/doors/client/*.lua'
+    'modules/doors/client/*.lua',
+    'modules/lockdown/client/main.lua'
 }
 
 -- Web UI Build (Später für React)
@@ -48,14 +48,3 @@ files {
 export 'HasAccess'
 export 'TriggerAlarm'
 export 'SetLockdownState'
-
-
-server_scripts {
-    '@oxmysql/lib/MySQL.lua',
-    'core/server/eventbus.lua',
-    'modules/doors/server/*.lua',
-    'modules/hacking/server/*.lua',
-    'modules/alarms/server/*.lua',
-    'modules/keycards/server/*.lua',
-    'modules/logs/server/discord.lua'
-}

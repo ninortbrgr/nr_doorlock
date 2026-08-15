@@ -39,6 +39,28 @@ lib.callback.register('access_control:server:InteractDoor', function(source, doo
     local door = DoorManager.Doors[doorId]
     if not door then return false, "DOOR_NOT_FOUND" end
 
+    -- ==========================================
+    -- NEU: LOCKDOWN CHECK
+    -- ==========================================
+    if door.owner_faction and exports['nr_doorlock']:IsFactionInLockdown(door.owner_faction) then
+        local player = PlayerManager.GetContext(source)
+        
+        if not player.isAdmin then
+            TriggerClientEvent('ox_lib:notify', source, { 
+                type = 'error', 
+                description = 'Zugriff verweigert! Das Gebäude befindet sich im Lockdown.' 
+            })
+            EventBus.Publish("AUDIT_LOG", { action = "ACCESS_DENIED", doorId = doorId, reason = "LOCKDOWN_ACTIVE" })
+            return false, "LOCKDOWN_ACTIVE"
+        else
+            TriggerClientEvent('ox_lib:notify', source, { 
+                type = 'warning', 
+                description = 'Lockdown aktiv - Admin-Override genutzt.' 
+            })
+        end
+    end
+    -- ==========================================
+
     -- Hier rufen wir unser Gehirn auf!
     local isAllowed, reason = PolicyEngine.Evaluate(source, doorId, 'ACCESS')
 
@@ -63,7 +85,6 @@ lib.callback.register('access_control:server:InteractDoor', function(source, doo
         return false, reason
     end
 end)
-
 -- 4. Auto-Lock Logik
 function DoorManager.HandleAutoLock(doorId, timeInSeconds)
     Citizen.CreateThread(function()
