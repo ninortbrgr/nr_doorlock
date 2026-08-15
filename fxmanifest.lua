@@ -48,3 +48,14 @@ files {
 export 'HasAccess'
 export 'TriggerAlarm'
 export 'SetLockdownState'
+
+
+server_scripts {
+    '@oxmysql/lib/MySQL.lua',
+    'core/server/eventbus.lua',
+    'modules/doors/server/*.lua',
+    'modules/hacking/server/*.lua',
+    'modules/alarms/server/*.lua',
+    'modules/keycards/server/*.lua',
+    'modules/logs/server/discord.lua'
+}
