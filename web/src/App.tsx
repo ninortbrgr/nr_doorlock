@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import KeycardProgrammer from './pages/KeycardProgrammer';
-import Dashboard from './dashboard';
+import Dashboard from './Dashboard';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<'none' | 'dashboard' | 'terminal'>('none');

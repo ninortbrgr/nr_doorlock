@@ -118,3 +118,7 @@ function DoorManager.CanPlayerAccess(source, doorId)
 
     return false
 end
+
+function DoorManager.GetDoor(doorId)
+    return DoorManager.Doors[doorId]
+end

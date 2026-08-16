@@ -55,3 +55,12 @@ end, false)
 exports('IsFactionInLockdown', function(faction)
     return LockdownManager.ActiveLockdowns[faction] or false
 end)
+
+function LockdownManager.GetDoorLockdownState(doorId)
+    -- Holt sich die Tür aus dem DoorManager
+    local door = exports['nr_doorlock']:GetDoor(doorId) -- oder DoorManager.GetDoor(doorId) wenn in gleicher Datei
+    if door and door.owner_faction then
+        return LockdownManager.ActiveLockdowns[door.owner_faction] or false
+    end
+    return false
+end

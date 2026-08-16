@@ -1,50 +1,46 @@
 fx_version 'cerulean'
 game 'gta5'
 
-description 'Modular Enterprise Access Control System'
+description 'NR Doorlock - Advanced Access Control'
 version '1.0.0'
-author 'Dein Name'
 
--- Dependencies
-dependencies {
-    'oxmysql',
-    'ox_target',
-    'ox_lib'
-}
+-- UI Pfad (wird erst nach dem npm run build gefunden)
+ui_page 'web/dist/index.html'
 
--- Configs
 shared_scripts {
     '@ox_lib/init.lua',
-    'config/default_config.lua',
-    'core/shared/*.lua'
+    'config.lua'
 }
 
--- Server-Side Core & Modules
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
-    'core/server/eventbus.lua',
+    -- Core
+    'core/server/database.lua',
+    'core/server/context_manager.lua',
+    'core/server/policy_engine.lua',
+    -- Modules
     'modules/doors/server/*.lua',
-    'modules/hacking/server/*.lua',
-    'modules/alarms/server/*.lua',
-    'modules/keycards/server/*.lua',
-    'modules/logs/server/discord.lua'
+    'modules/credentials/server/*.lua',
+    'modules/lockdown/server/*.lua',
+    'modules/hacking/server/*.lua'
 }
--- Client-Side Core & Modules
+
 client_scripts {
-    'core/client/sync.lua',
+    -- Core
+    'core/client/ui_callbacks.lua',
+    -- Modules
     'modules/doors/client/*.lua',
-    'modules/lockdown/client/main.lua'
+    'modules/credentials/client/*.lua',
+    'modules/lockdown/client/*.lua',
+    'modules/hacking/client/*.lua'
 }
 
--- Web UI Build (Später für React)
-ui_page 'web/build/index.html'
 files {
-    'web/build/index.html',
-    'web/build/assets/*.js',
-    'web/build/assets/*.css'
+    -- Das ist der Standard-Output-Ordner für Vite (React)
+    'web/dist/index.html',
+    'web/dist/assets/*.js',
+    'web/dist/assets/*.css'
 }
 
--- Exports (API für andere Scripte)
-export 'HasAccess'
-export 'TriggerAlarm'
-export 'SetLockdownState'
+-- Exporte (nur die, die wir wirklich bereits in der main.lua definiert haben)
+export 'IsFactionInLockdown'
